@@ -13,7 +13,7 @@ type Entry struct {
 	Value     []byte
 	KeySize   uint32
 	ValueSize uint32
-	Mark      uint16 // what's this?
+	Mark      uint16 // operation: PUT or DELETE
 }
 
 func NewEntry(key, value []byte, mark uint16) *Entry {
@@ -68,7 +68,7 @@ func (e *Entry) Encode() ([]byte, error) {
 }
 
 // convert bytes to Entry object
-func (e *Entry) Decode(buf []byte) (*Entry, error) {
+func Decode(buf []byte) (*Entry, error) {
 	keySize := binary.BigEndian.Uint32(buf[0:4])
 	valueSize := binary.BigEndian.Uint32(buf[4:8])
 	mark := binary.BigEndian.Uint16(buf[8:10])
