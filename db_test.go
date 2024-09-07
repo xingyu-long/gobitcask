@@ -1,6 +1,7 @@
 package gobitcask
 
 import (
+	"bytes"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -28,10 +29,14 @@ func TestDB_Put(t *testing.T) {
 	keyPrefix := "test_key_"
 	valPrefix := "test_val_"
 
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 10000; i++ {
 		key := []byte(keyPrefix + strconv.Itoa(i%5))
 		val := []byte(valPrefix + strconv.FormatInt(r.Int63(), 10))
 		err = db.Put(key, val)
+		ret_val, err := db.Get(key)
+		if !bytes.Equal(val, ret_val) {
+			t.Error(err)
+		}
 	}
 
 	if err != nil {

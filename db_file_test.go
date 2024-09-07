@@ -1,8 +1,10 @@
 package gobitcask
 
 import (
-	"fmt"
+	"math/rand"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -18,8 +20,14 @@ func TestWriteReadEntry(t *testing.T) {
 
 	assert := assert.New(t)
 	var offset int64 = 0
-	for i := 0; i < 5; i++ {
-		entry := NewEntry([]byte(fmt.Sprint("key", i)), []byte(fmt.Sprint("value", i)), PUT)
+	keyPrefix := "test_key_"
+	valPrefix := "test_val_"
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	for i := 0; i < 10000; i++ {
+		key := []byte(keyPrefix + strconv.Itoa(i%5))
+		val := []byte(valPrefix + strconv.FormatInt(r.Int63(), 10))
+		entry := NewEntry(key, val, PUT)
 		err = df.Write(entry)
 		if err != nil {
 			t.Fatal(err)
