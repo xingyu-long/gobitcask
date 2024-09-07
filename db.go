@@ -2,6 +2,7 @@ package gobitcask
 
 import (
 	"io"
+	"os"
 	"path/filepath"
 	"sync"
 )
@@ -128,7 +129,63 @@ func (db *GoBitcask) readIndexesFromDBFile() (err error) {
 	return nil
 }
 
+// remove invalid entries and flush them to file
 func (db *GoBitcask) Merge() error {
+	if db.dbFile.Offset == 0 {
+		return nil
+	}
+
+	var (
+		offset       int64
+		validEntires []*Entry
+	)
+	for {
+		e, err := db.dbFile.Read(offset)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+		if off, ok := db.indexes[string(e.Key)]; ok && off == offset {
+			// current offset matches with hashmap (latest one)
+			validEntires = append(validEntires, e)
+		}
+		offset += e.GetSize()
+	}
+
+	mergeDBFile, err := NewDBMergeFile(db.dirPath)
+	if err != nil {
+		return err
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	for _, entry := range validEntires {
+		writeOff := mergeDBFile.Offset
+		err = mergeDBFile.Write(entry)
+		if err != nil {
+			return err
+		}
+		// update hashmap with latest offset
+		db.indexes[string(entry.Key)] = writeOff
+	}
+
+	dbFileName := db.dbFile.File.Name()
+	_ = db.dbFile.File.Close()
+	_ = os.Remove(dbFileName)
+
+	_ = mergeDBFile.File.Close()
+	mergeDBFileName := mergeDBFile.File.Name()
+	_ = os.Rename(mergeDBFileName, filepath.Join(db.dirPath, FileName))
+
+	// create new DBFile object and Offset will be set by current file size
+	dbFile, err := NewDBFile(db.dirPath)
+	if err != nil {
+		return err
+	}
+
+	db.dbFile = dbFile
 	return nil
 }
 

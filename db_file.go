@@ -13,6 +13,7 @@ type DBFile struct {
 }
 
 const FileName = "gobitcask.data"
+const MergeFileName = "gobitcask.data.merge"
 
 // create new DB file and return it
 func newInternal(filePath string) (*DBFile, error) {
@@ -35,6 +36,11 @@ func newInternal(filePath string) (*DBFile, error) {
 
 func NewDBFile(path string) (*DBFile, error) {
 	filePath := filepath.Join(path, FileName)
+	return newInternal(filePath)
+}
+
+func NewDBMergeFile(path string) (*DBFile, error) {
+	filePath := filepath.Join(path, MergeFileName)
 	return newInternal(filePath)
 }
 
