@@ -33,7 +33,7 @@ func newInternal(filePath string) (*DBFile, error) {
 	return &DBFile{Offset: stat.Size(), File: file, HeaderBufPool: pool}, nil
 }
 
-func newDBFile(path string) (*DBFile, error) {
+func NewDBFile(path string) (*DBFile, error) {
 	filePath := filepath.Join(path, FileName)
 	return newInternal(filePath)
 }
