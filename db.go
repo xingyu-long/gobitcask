@@ -86,6 +86,24 @@ func (db *GoBitcask) Get(key []byte) (value []byte, err error) {
 	return
 }
 
+func (db *GoBitcask) Delete(key []byte) (err error) {
+	if len(key) == 0 {
+		return
+	}
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	_, err = db.exist(key)
+	if err == ErrKeyNotFound {
+		return
+	}
+
+	entry := NewEntry(key, nil, DELETE)
+	db.dbFile.Write(entry)
+
+	delete(db.indexes, string(key))
+	return
+}
+
 func (db *GoBitcask) readIndexesFromDBFile() (err error) {
 	if db.dbFile == nil {
 		return

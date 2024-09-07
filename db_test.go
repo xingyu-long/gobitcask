@@ -75,5 +75,32 @@ func TestDB_Get(t *testing.T) {
 }
 
 func TestDB_Delete(t *testing.T) {
+	db, err := Open(dirPath)
+	if err != nil {
+		t.Error(err)
+	}
 
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	keyPrefix := "test_key_"
+	valPrefix := "test_val_"
+
+	for i := 0; i < 5; i++ {
+		key := []byte(keyPrefix + strconv.Itoa(i%5))
+		val := []byte(valPrefix + strconv.FormatInt(r.Int63(), 10))
+		err = db.Put(key, val)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if i%2 == 0 {
+			if err = db.Delete(key); err != nil {
+				t.Fatal(err)
+			}
+			if _, err = db.Get(key); err != nil && err == ErrKeyNotFound {
+				t.Logf("%s not found as expected", string(key))
+			} else {
+				t.Fatal(err)
+			}
+		}
+	}
 }
