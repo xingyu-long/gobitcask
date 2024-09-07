@@ -1,4 +1,4 @@
-module gobitcask
+module github.com/xingyu-long/gobitcask
 
 go 1.21.13
 
